@@ -94,7 +94,7 @@ class Program
             }
         }
 
-        Console.CursorVisible = true;
+        ConsoleGuard.CursorVisible(true);
 
         var totalStopwatch = Stopwatch.StartNew();
         var clientResults = new ConcurrentBag<(string key, ClientExportResult result)>();
@@ -110,8 +110,8 @@ class Program
             config.MaxSheetParallelism ?? Math.Clamp(Environment.ProcessorCount, 1, 8);
         maxSheetParallelism = Math.Clamp(maxSheetParallelism, 1, 128);
 
-        Console.ForegroundColor = ConsoleColor.Cyan;
-        Console.ResetColor();
+        ConsoleGuard.Color = ConsoleColor.Cyan;
+        ConsoleGuard.Reset();
 
         foreach (var clientKey in selectedKeys)
         {
@@ -152,13 +152,13 @@ class Program
 
             int totalLineLength = Math.Min(
                 wKey + wVer + wSchema + wSuccess + wFailed + wTime + 18 + wPath,
-                Console.WindowWidth - 1
+                ConsoleGuard.WindowWidthOr(120) - 1
             );
             string lineSep = new('=', totalLineLength);
 
             Console.WriteLine(lineSep);
 
-            Console.ForegroundColor = ConsoleColor.DarkGray;
+            ConsoleGuard.Color = ConsoleColor.DarkGray;
             Console.WriteLine(
                 $"{PadRightVisual("客户端", wKey)} │ {PadRightVisual("版本", wVer)} │ {PadRightVisual("Schema", wSchema)} │ {PadLeftVisual("成功", wSuccess)} │ {PadLeftVisual("失败", wFailed)} │ {PadLeftVisual("耗时", wTime)} │ 输出目录"
             );
@@ -166,32 +166,32 @@ class Program
 
             foreach (var r in orderedResults)
             {
-                Console.ResetColor();
+                ConsoleGuard.Reset();
                 Console.Write(PadRightVisual(r.ClientKey, wKey) + " │ ");
                 Console.Write(PadRightVisual(r.ClientVersion, wVer) + " │ ");
                 Console.Write(PadRightVisual(r.ActualSchema, wSchema) + " │ ");
                 Console.Write(PadLeftVisual(r.SuccessCount.ToString(), wSuccess) + " │ ");
 
                 if (r.FailedCount > 0)
-                    Console.ForegroundColor = ConsoleColor.Red;
+                    ConsoleGuard.Color = ConsoleColor.Red;
                 else
-                    Console.ResetColor();
+                    ConsoleGuard.Reset();
                 Console.Write(PadLeftVisual(r.FailedCount.ToString(), wFailed) + " │ ");
 
-                Console.ResetColor();
+                ConsoleGuard.Reset();
                 Console.Write(PadLeftVisual(r.ElapsedSeconds.ToString("F2") + "s", wTime) + " │ ");
 
-                Console.ForegroundColor = ConsoleColor.DarkGray;
+                ConsoleGuard.Color = ConsoleColor.DarkGray;
                 Console.WriteLine(r.OutputDir);
             }
 
-            Console.ResetColor();
+            ConsoleGuard.Reset();
             Console.WriteLine(lineSep);
-            Console.ForegroundColor = ConsoleColor.Green;
+            ConsoleGuard.Color = ConsoleColor.Green;
             Console.WriteLine(
                 $"完成 | 总计: {orderedResults.Count} 个客户端 | 总耗时: {totalStopwatch.Elapsed.TotalSeconds:F2}s"
             );
-            Console.ResetColor();
+            ConsoleGuard.Reset();
             Console.WriteLine(lineSep);
         }
     }
@@ -219,9 +219,9 @@ class Program
         {
             lock (globalConsoleLock)
             {
-                Console.ForegroundColor = color;
+                ConsoleGuard.Color = color;
                 Console.WriteLine($"[{clientKey}] {status}");
-                Console.ResetColor();
+                ConsoleGuard.Reset();
             }
         }
 
@@ -464,9 +464,9 @@ class Program
                 {
                     lock (globalConsoleLock)
                     {
-                        Console.ForegroundColor = ConsoleColor.DarkGray;
+                        ConsoleGuard.Color = ConsoleColor.DarkGray;
                         Console.WriteLine($"[{clientKey}] 详细日志:\n{logBuffer}");
-                        Console.ResetColor();
+                        ConsoleGuard.Reset();
                     }
                 }
                 return new ClientExportResult
@@ -582,9 +582,9 @@ class Program
             {
                 lock (globalConsoleLock)
                 {
-                    Console.ForegroundColor = ConsoleColor.DarkGray;
+                    ConsoleGuard.Color = ConsoleColor.DarkGray;
                     Console.WriteLine($"\n[{clientKey}] 补充信息:\n{logBuffer}");
-                    Console.ResetColor();
+                    ConsoleGuard.Reset();
                 }
             }
         }
@@ -649,11 +649,11 @@ class Program
             {
                 lock (consoleLock)
                 {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    ConsoleGuard.Color = ConsoleColor.Yellow;
                     Console.WriteLine($"\n⚠ 警告: 输出目录包含 {nonCsvFiles.Count} 个非 CSV 文件!");
                     Console.WriteLine($"目录: {path}");
                     Console.WriteLine("\n非 CSV 文件列表 (前20个):");
-                    Console.ResetColor();
+                    ConsoleGuard.Reset();
 
                     foreach (var file in nonCsvFiles.Take(20))
                     {
@@ -664,9 +664,9 @@ class Program
                     if (nonCsvFiles.Count > 20)
                         Console.WriteLine($"  ... 还有 {nonCsvFiles.Count - 20} 个文件");
 
-                    Console.ForegroundColor = ConsoleColor.Yellow;
+                    ConsoleGuard.Color = ConsoleColor.Yellow;
                     Console.WriteLine("\n是否仍要清空此目录? [y/N]");
-                    Console.ResetColor();
+                    ConsoleGuard.Reset();
                     Console.Write("> ");
 
                     var response = Console.ReadLine()?.Trim().ToLower();
@@ -707,7 +707,7 @@ class Program
 
                         if (lockedFiles.Count > 0)
                         {
-                            Console.ForegroundColor = ConsoleColor.Red;
+                            ConsoleGuard.Color = ConsoleColor.Red;
                             Console.WriteLine(
                                 $"\n✗ 警告: 有 {lockedFiles.Count} 个文件因被占用无法删除:"
                             );
@@ -715,16 +715,16 @@ class Program
                                 Console.WriteLine($"  - {f}");
                             if (lockedFiles.Count > 10)
                                 Console.WriteLine("  ...");
-                            Console.ResetColor();
+                            ConsoleGuard.Reset();
                             return false;
                         }
                         return true;
                     }
                     else
                     {
-                        Console.ForegroundColor = ConsoleColor.Red;
+                        ConsoleGuard.Color = ConsoleColor.Red;
                         Console.WriteLine("✗ 已取消清空,将跳过此客户端");
-                        Console.ResetColor();
+                        ConsoleGuard.Reset();
                         return false;
                     }
                 }
@@ -734,9 +734,9 @@ class Program
         {
             lock (consoleLock)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                ConsoleGuard.Color = ConsoleColor.Red;
                 Console.WriteLine($"清空目录失败: {ex.Message}");
-                Console.ResetColor();
+                ConsoleGuard.Reset();
             }
             return false;
         }

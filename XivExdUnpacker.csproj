@@ -13,7 +13,7 @@
 
   <ItemGroup>
     <!-- Lumina 核心库 - 最新版本 -->
-    <PackageReference Include="Lumina" Version="7.1.0" />
+    <PackageReference Include="Lumina" Version="7.6.1" />
     <!-- YAML 解析 -->
     <PackageReference Include="YamlDotNet" Version="16.3.0" />
   </ItemGroup>

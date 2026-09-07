@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "XivExdUnpacker": {
+      "commandName": "Project",
+      "commandLineArgs": "--language en --sheet LogMessage"
+    }
+  }
+}

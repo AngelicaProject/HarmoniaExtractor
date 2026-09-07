@@ -1,14 +1,16 @@
-using System.Buffers.Binary;
-using System.Collections.Concurrent;
-using System.Text;
 using Lumina;
 using Lumina.Data;
 using Lumina.Data.Files;
 using Lumina.Data.Files.Excel;
 using Lumina.Data.Structs.Excel;
+using Lumina.Text.ReadOnly;
 using SaintCoinach.Text;
+using System.Buffers.Binary;
+using System.Collections.Concurrent;
+using System.Text;
 using XivExdUnpacker.Decoders;
 using XivExdUnpacker.src.Models;
+using XivExdUnpacker.src.Services;
 
 namespace XivExdUnpacker.src.Core;
 
@@ -345,9 +347,9 @@ public class ExdExporter(bool useHexcode = true, bool includeOffset = true)
 
             lock (Console.Out)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
+                ConsoleGuard.Color = ConsoleColor.Red;
                 Console.Write($"[Error] ");
-                Console.ResetColor();
+                ConsoleGuard.Reset();
                 Console.WriteLine(
                     $"读取失败 @ {sheetName} -> 行:{rowId} | 列偏移:0x{column.Offset:X} | 类型:{column.Type} | 实际地址:0x{offset:X}"
                 );
@@ -366,10 +368,10 @@ public class ExdExporter(bool useHexcode = true, bool includeOffset = true)
                     hexDump = "获取失败";
                 }
 
-                Console.ForegroundColor = ConsoleColor.DarkGray;
+                ConsoleGuard.Color = ConsoleColor.DarkGray;
                 Console.WriteLine($"        错误信息: {ex.Message}");
                 Console.WriteLine($"        原始数据: [{hexDump}]");
-                Console.ResetColor();
+                ConsoleGuard.Reset();
             }
             return "";
         }
@@ -384,10 +386,9 @@ public class ExdExporter(bool useHexcode = true, bool includeOffset = true)
             length++;
         var stringData = data.AsSpan(absoluteOffset, length).ToArray();
 
-        if (_useHexcode)
-            return _threadHexDecoder.Value!.Decode(stringData).ToString();
-        else
-            return _threadReadableDecoder.Value!.Decode(stringData);
+        var seString = new ReadOnlySeString(stringData);
+        string stringForCsv = seString.ToMacroString();
+        return stringForCsv;
     }
 
     private string EscapeCsv(string value)
